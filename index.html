@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#291612">
+  <meta name="description" content="Carta digital de Corazón de Café.">
+  <title>Corazón de Café | Carta digital</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero" id="inicio">
+  <nav class="nav">
+    <a class="brand" href="#inicio" aria-label="Corazón de Café, inicio">
+      <span class="brand-seal">♡</span><span class="brand-text">Corazón <small>de Café</small></span>
+    </a>
+    <div class="nav-actions">
+      <a class="nav-link" href="#carta">Ver carta <span>↓</span></a>
+      <button class="admin-open" id="openAdmin" type="button">⚙ Administrar</button>
+    </div>
+  </nav>
+  <div class="hero-cover">
+    <img class="hero-cover-image" src="images/portada-corazon-de-cafe.jpg" alt="Portada de Corazón de Café con capuchino, granos de café y el lema Elegancia y sabor en un solo lugar">
+  </div>
+  <div class="hero-bottom">
+    <p>CAFÉ · SABOR · MOMENTOS</p>
+    <a class="button" href="#carta">Descubrir la carta <span>↘</span></a>
+  </div>
+</header>
+
+<main id="carta">
+  <section class="welcome">
+    <p class="eyebrow">BIENVENIDO A CORAZÓN DE CAFÉ</p>
+    <h2>¿Qué se te antoja hoy?</h2>
+    <p>Explora nuestras categorías y encuentra tu próximo favorito.</p>
+  </section>
+  <div class="category-wrap"><div class="category-bar" id="categoryBar" aria-label="Categorías"></div></div>
+  <section class="menu-section">
+    <div class="section-top">
+      <div><p class="eyebrow">HECHO PARA DISFRUTAR</p><h2 id="sectionTitle">Bebidas</h2></div>
+      <span class="count" id="itemCount"></span>
+    </div>
+    <div class="menu-grid" id="menuGrid"></div>
+    <p class="price-note">Los productos marcados como “Consultar” no tienen un precio confirmado todavía.</p>
+  </section>
+  <section class="contact">
+    <div class="contact-symbol">♡</div>
+    <div class="contact-copy"><p class="eyebrow">¿LISTO PARA DISFRUTAR?</p><h2>Hablemos por WhatsApp.</h2><p>Consulta disponibilidad, precios y haz tu pedido directamente.</p></div>
+    <a class="button button-cream" id="whatsappButton" href="https://wa.me/573001547647" target="_blank" rel="noopener">Escribir ahora <span>↗</span></a>
+  </section>
+</main>
+<footer>
+  <a class="brand footer-brand" href="#inicio"><span class="brand-seal">♡</span><span class="brand-text">Corazón <small>de Café</small></span></a>
+  <p class="footer-slogan">Elegancia y sabor en un solo lugar.</p>
+  <p class="footer-small">Carta digital · Precios en pesos colombianos (COP)</p>
+</footer>
+
+<!-- Panel de administración -->
+<div class="modal-backdrop" id="adminModal" hidden>
+  <section class="admin-panel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <button class="modal-close" id="closeAdmin" aria-label="Cerrar" type="button">×</button>
+    <div id="loginView">
+      <div class="admin-icon">🔐</div>
+      <p class="eyebrow">ÁREA PRIVADA</p>
+      <h2 id="adminTitle">Administrar la carta</h2>
+      <p class="admin-description">Ingresa la clave para cambiar precios y fotos de los productos.</p>
+      <form id="loginForm">
+        <label for="adminPassword">Contraseña</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="Escribe la contraseña" required>
+        <p class="form-error" id="loginError" role="alert"></p>
+        <button class="button full-button" type="submit">Entrar al panel <span>→</span></button>
+      </form>
+    </div>
+    <div id="editorView" hidden>
+      <p class="eyebrow">PANEL PRIVADO</p>
+      <h2>Editar productos</h2>
+      <p class="admin-description">Modifica el precio y la foto, y guarda los cambios en este navegador.</p>
+      <label for="productSelector">Producto</label>
+      <select id="productSelector"></select>
+      <div class="edit-preview" id="editPreview"><span>Sin foto</span></div>
+      <label for="productPhoto">Cambiar foto del producto</label>
+      <input id="productPhoto" type="file" accept="image/*">
+      <small class="help-text">Usa una imagen JPG, PNG o WebP. Para que cargue rápido, recomendamos menos de 1 MB.</small>
+      <label for="productPrice">Precio en pesos colombianos (COP)</label>
+      <input id="productPrice" type="number" min="0" step="500" placeholder="Ej. 7000">
+      <div class="editor-actions">
+        <button class="button" id="saveProduct" type="button">Guardar cambios</button>
+        <button class="secondary-button" id="removePhoto" type="button">Quitar foto</button>
+      </div>
+      <p class="save-status" id="saveStatus" role="status"></p>
+      <div class="admin-bottom">
+        <button class="text-button" id="exportData" type="button">Descargar respaldo</button>
+        <button class="text-button" id="resetData" type="button">Restablecer carta</button>
+        <button class="text-button" id="logout" type="button">Cerrar sesión</button>
+      </div>
+      <p class="warning-note">Los cambios se guardan en este navegador. Para compartirlos con todos los clientes y dispositivos se necesita conectar una base de datos.</p>
+    </div>
+  </section>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
