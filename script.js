@@ -45,7 +45,7 @@ try {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
   auth = firebase.auth();
-  storage = firebase.storage();
+  storage = (firebase.storage ? firebase.storage() : null);
   firebaseReady = true;
   console.info("Firebase conectado correctamente:", firebaseConfig.projectId);
 } catch (error) {
@@ -85,7 +85,7 @@ function renderProducts(){
 }
 function refreshProducts(){
  if(!db){renderProducts();return;}
- db.collection("productos").onSnapshot(snapshot=>{
+ try { db.collection("productos").onSnapshot(snapshot=>{
    remoteProducts=snapshot.docs.map(normalizedDoc);
    const defaultIds=new Set(defaultProducts.map(p=>p.originalDocId));
    const byId=new Map(remoteProducts.map(p=>[p.id,p]));
@@ -96,7 +96,8 @@ function refreshProducts(){
    const extras=remoteProducts.filter(p=>!defaultIds.has(p.id));
    allProducts=[...defaults,...extras]; productsReady=true; renderProducts();
    if(!$ ("editorView").hidden) populateSelector();
- },error=>{console.error(error);renderProducts();});
+ },error=>{console.error("Error leyendo productos de Firebase:",error);renderProducts();}); }
+ catch(error){console.error("No se pudo iniciar la lectura de Firebase:",error);renderProducts();}
 }
 function openModal(){$("adminModal").hidden=false;document.body.classList.add("modal-open");$("loginView").hidden=false;$("editorView").hidden=true;$("adminPassword").value="";$("loginError").textContent="";setTimeout(()=>$ ("adminPassword").focus(),50)}
 function closeModal(){$("adminModal").hidden=true;document.body.classList.remove("modal-open");selectedPhotoFile=null;$("productPhoto").value=""}
@@ -120,7 +121,7 @@ function loadSelectedProduct(){const p=currentProduct();if(!p)return;selectedPho
 function showPreview(src){const preview=$("editPreview");preview.innerHTML=src?`<img src="${escapeHTML(src)}" alt="Vista previa de la foto">`:"<span>Sin foto seleccionada</span>";}
 $("productSelector").addEventListener("change",loadSelectedProduct);
 $("productPhoto").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){$("saveStatus").textContent="Selecciona un archivo de imagen.";return;}if(file.size>5*1024*1024){$("saveStatus").textContent="La imagen supera 5 MB. Elige una más pequeña.";e.target.value="";return;}selectedPhotoFile=file;const reader=new FileReader();reader.onload=()=>showPreview(reader.result);reader.readAsDataURL(file);$("saveStatus").textContent="Foto lista. Pulsa Guardar cambios.";});
-async function uploadPhoto(file,productId){const ref=storage.ref(`productos/${productId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`);await ref.put(file);return await ref.getDownloadURL();}
+async function uploadPhoto(file,productId){if(!storage){throw new Error("Firebase Storage no está cargado. Recarga la página e inténtalo de nuevo.");}const ref=storage.ref(`productos/${productId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`);await ref.put(file);return await ref.getDownloadURL();}
 async function saveProduct(){
  if (!firebaseReady || !db || !auth || !auth.currentUser) {
    $("saveStatus").textContent = "Inicia sesión y verifica que Firebase esté conectado.";
