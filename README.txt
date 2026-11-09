@@ -1,28 +1,16 @@
-CORAZÓN DE CAFÉ — CARTA CON PANEL DE EDICIÓN
-=============================================
+CORAZÓN DE CAFÉ — CORRECCIÓN DEL PANEL
 
-ARCHIVOS
-- index.html: página y ventana privada de administración.
-- styles.css: diseño adaptable a celular y computador.
-- script.js: productos, precios, fotos y panel de edición.
+1. Haz una copia de seguridad de tu carpeta actual.
+2. Reemplaza index.html, script.js y styles.css por los de esta carpeta.
+3. Conserva tus otras imágenes y archivos del proyecto.
+4. Sube los cambios a GitHub y espera el nuevo despliegue de Render.
+5. Abre la página con Cmd + Shift + R para forzar la actualización.
 
-CÓMO ABRIR
-1. Descomprime este ZIP.
-2. En Visual Studio Code, usa Archivo > Abrir carpeta y abre esta carpeta.
-3. Si aparece Restricted Mode, confía en la carpeta si reconoces los archivos.
-4. Instala/activa Live Server, abre index.html y pulsa Go Live.
+El panel ahora permite editar el nombre y el precio del producto seleccionado.
+Los nombres de los productos predeterminados se guardan usando un identificador estable,
+para que cambiar el nombre no genere productos duplicados.
 
-CÓMO EDITAR LA CARTA
-1. En la web, pulsa "Administrar".
-2. Escribe la clave: XIOMY123
-3. Elige el producto.
-4. Cambia el precio o selecciona una foto desde tu computador.
-5. Pulsa "Guardar cambios".
-
-El botón "Descargar respaldo" exporta las ediciones como JSON.
-"Restablecer carta" elimina los cambios guardados en ese navegador.
-
-IMPORTANTE — PROTOTIPO
-Esta versión guarda cambios en el almacenamiento local del navegador. Por eso, los cambios se ven en el mismo navegador/computador y no se sincronizan automáticamente con otros celulares o clientes.
-La clave está en el JavaScript del navegador; no debe considerarse una protección segura en una web pública. Antes de usarlo en Render con datos reales, se recomienda implementar autenticación en el servidor y una base de datos/almacenamiento de imágenes para que solo el dueño pueda editar y los cambios se compartan a todos.
-El QR definitivo se genera cuando la web esté publicada en Render.
+IMPORTANTE:
+- No borres la configuración de Firebase.
+- La cuenta de administrador y las reglas de Firestore deben seguir habilitadas.
+- Si tu proyecto ya tiene otras imágenes de productos, consérvalas.
