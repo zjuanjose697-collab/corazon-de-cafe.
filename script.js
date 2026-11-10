@@ -1,5 +1,7 @@
+
 // Corazón de Café: carta y panel de edición.
-// DEMO: la clave se valida en el navegador y no protege datos en un servidor.
+// Las fotografías se comprimen y se guardan en Firestore,
+// sin utilizar Firebase Storage ni servicios externos.
 
 const ADMIN_PASSWORD = "XIOMY123";
 
@@ -143,7 +145,7 @@ const firebaseConfig = {
   appId: "1:1050467610067:web:2f979cffa29ca3cb935326"
 };
 
-// FUNCIÓN SLUG: debe declararse antes de construir defaultProducts.
+// DECLARAR SLUG ANTES DE UTILIZARLO
 function slug(s) {
   return String(s)
     .normalize("NFD")
@@ -158,7 +160,7 @@ const money = n =>
     ? "Consultar"
     : "$" + Number(n).toLocaleString("es-CO");
 
-// FIREBASE
+// CONEXIÓN FIREBASE
 let db = null;
 let auth = null;
 let firebaseReady = false;
@@ -177,12 +179,12 @@ try {
   console.error("Firebase no pudo inicializarse:", error);
 }
 
-// PRODUCTOS
 let activeCategory = "bebidas";
 let selectedPhotoFile = null;
 let remoteProducts = [];
 let productsReady = false;
 
+// PRODUCTOS PREDETERMINADOS
 const defaultProducts = products.map((p, i) => ({
   id: `base_${i}`,
   originalDocId: slug(`${p[2]}-${p[0]}`),
@@ -220,7 +222,7 @@ function normalizedDoc(d) {
   };
 }
 
-// CATEGORÍAS
+// MOSTRAR CATEGORÍAS
 function renderCategories() {
   categoryBar.innerHTML = categories.map(c => `
     <button class="category-btn ${c.id === activeCategory ? "active" : ""}"
@@ -272,7 +274,7 @@ function renderProducts() {
   }).join("");
 }
 
-// CARGAR PRODUCTOS DE FIREBASE
+// CARGAR PRODUCTOS DESDE FIRESTORE
 function refreshProducts() {
   if (!db) {
     renderProducts();
@@ -315,7 +317,7 @@ function refreshProducts() {
   });
 }
 
-// PANEL ADMINISTRADOR
+// ABRIR Y CERRAR ADMINISTRACIÓN
 function openModal() {
   $("adminModal").hidden = false;
   document.body.classList.add("modal-open");
@@ -421,7 +423,6 @@ function loadSelectedProduct() {
   showPreview(p.photoUrl);
 }
 
-// VISTA PREVIA DE FOTO
 function showPreview(src) {
   const preview = $("editPreview");
 
@@ -554,7 +555,6 @@ async function saveProduct() {
   }
 
   $("saveProduct").disabled = true;
-
   $("saveStatus").textContent =
     "Preparando y guardando en Firestore…";
 
@@ -565,11 +565,12 @@ async function saveProduct() {
       photoUrl = await compressPhoto(selectedPhotoFile);
     }
 
+    // CORRECCIÓN: fotoUrl recibe explícitamente photoUrl.
     const payload = {
       nombre: name,
       precio: raw === "" ? null : Number(raw),
       categoria: p.category,
-      fotoUrl,
+      fotoUrl: photoUrl,
       disponible: true,
       actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -587,12 +588,10 @@ async function saveProduct() {
     p.photoUrl = photoUrl;
 
     selectedPhotoFile = null;
-
     $("productPhoto").value = "";
 
     populateSelector();
     $("productSelector").value = p.id;
-
     showPreview(photoUrl);
 
     $("saveStatus").textContent =
