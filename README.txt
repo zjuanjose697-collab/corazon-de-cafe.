@@ -1,16 +1,15 @@
-CORAZÓN DE CAFÉ — CORRECCIÓN DEL PANEL
+CORAZÓN DE CAFÉ — VERSIÓN CON FIRESTORE
 
-1. Haz una copia de seguridad de tu carpeta actual.
-2. Reemplaza index.html, script.js y styles.css por los de esta carpeta.
-3. Conserva tus otras imágenes y archivos del proyecto.
-4. Sube los cambios a GitHub y espera el nuevo despliegue de Render.
-5. Abre la página con Cmd + Shift + R para forzar la actualización.
+Estos son los archivos que estaban conectados a Firebase/Firestore antes de los últimos cambios:
+- index.html
+- script.js
 
-El panel ahora permite editar el nombre y el precio del producto seleccionado.
-Los nombres de los productos predeterminados se guardan usando un identificador estable,
-para que cambiar el nombre no genere productos duplicados.
+RESTAURACIÓN:
+1. Haz una copia de seguridad de tu repositorio.
+2. Reemplaza index.html y script.js por estos archivos.
+3. NO reemplaces ni borres tu styles.css ni la carpeta images; conserva los que ya están en tu repositorio.
+4. Sube los cambios a GitHub y espera el despliegue de Render.
+5. Abre la web con Cmd + Shift + R.
 
-IMPORTANTE:
-- No borres la configuración de Firebase.
-- La cuenta de administrador y las reglas de Firestore deben seguir habilitadas.
-- Si tu proyecto ya tiene otras imágenes de productos, consérvalas.
+El index original referencia estas hojas de estilo: styles.css
+Esta versión conserva la conexión Firebase/Firestore y el inicio de sesión por correo y contraseña.
