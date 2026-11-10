@@ -1,7 +1,6 @@
 // Corazón de Café: carta y panel de edición.
 // DEMO: la clave se valida en el navegador y no protege datos en un servidor.
 const ADMIN_PASSWORD = "XIOMY123";
-const STORAGE_KEY = "corazonCafeMenuEditsV1";
 const categories = [
  {id:"bebidas",label:"☕ Bebidas",title:"Bebidas"},
  {id:"limonadas",label:"🍋 Limonadas y especiales",title:"Limonadas y bebidas especiales"},
@@ -30,23 +29,22 @@ const firebaseConfig = {
   apiKey: "AIzaSyBQiAZiXpxigyp_NjtBPwlhtOeAagwGINY",
   authDomain: "corazon-de-cafe-ad08b.firebaseapp.com",
   projectId: "corazon-de-cafe-ad08b",
-  storageBucket: "corazon-de-cafe-ad08b.firebasestorage.app",
   messagingSenderId: "1050467610067",
   appId: "1:1050467610067:web:2f979cffa29ca3cb935326"
 };
 
 // Firebase SDK compat: cargado desde CDN en index.html.
-let db=null, auth=null, storage=null, firebaseReady=false;
+let db=null, auth=null, firebaseReady=false;
 try {
   if (window.firebase) {
     firebase.initializeApp(firebaseConfig);
-    db=firebase.firestore(); auth=firebase.auth(); storage=firebase.storage();
+    db=firebase.firestore(); auth=firebase.auth();
     firebaseReady=true;
   }
 } catch (error) { console.error("Firebase no pudo inicializarse:", error); }
 
 let activeCategory="bebidas", selectedPhotoFile=null, remoteProducts=[], productsReady=false;
-const defaultProducts = products.map((p,i)=>({id:`base_${i}`,name:p[0],price:p[1],category:p[2],photoUrl:null,available:true,isDefault:true}));
+const defaultProducts = products.map((p,i)=>({id:`base_${i}`,originalDocId:slug(`${p[2]}-${p[0]}`),name:p[0],price:p[1],category:p[2],photoUrl:null,available:true,isDefault:true}));
 let allProducts=[...defaultProducts];
 const money=n=>n==null||n===""?"Consultar":"$"+Number(n).toLocaleString("es-CO");
 const slug=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -69,9 +67,10 @@ function refreshProducts(){
  if(!db){renderProducts();return;}
  db.collection("productos").onSnapshot(snapshot=>{
    remoteProducts=snapshot.docs.map(normalizedDoc);
-   const byName=new Map(remoteProducts.map(p=>[`${p.category}::${p.name.toLocaleLowerCase()}`,p]));
-   const defaults=defaultProducts.map(p=>byName.get(`${p.category}::${p.name.toLocaleLowerCase()}`)||p);
-   const extras=remoteProducts.filter(p=>!defaultProducts.some(d=>d.category===p.category&&d.name.toLocaleLowerCase()===p.name.toLocaleLowerCase()));
+   const byId=new Map(remoteProducts.map(p=>[p.id,p]));
+   const defaults=defaultProducts.map(p=>({...p,...(byId.get(p.originalDocId)||{}) ,id:p.id,originalDocId:p.originalDocId,isDefault:true}));
+   const defaultIds=new Set(defaultProducts.map(p=>p.originalDocId));
+   const extras=remoteProducts.filter(p=>!defaultIds.has(p.id));
    allProducts=[...defaults,...extras]; productsReady=true; renderProducts();
    if(!$ ("editorView").hidden) populateSelector();
  },error=>{console.error(error);renderProducts();});
@@ -94,25 +93,49 @@ function populateSelector(){
  if(allProducts.some(p=>p.id===current))sel.value=current;
 }
 function currentProduct(){return allProducts.find(p=>p.id===$("productSelector").value)||allProducts[0];}
-function loadSelectedProduct(){const p=currentProduct();if(!p)return;selectedPhotoFile=null;$("productPrice").value=p.price??"";$("productPhoto").value="";$("saveStatus").textContent="";showPreview(p.photoUrl);}
+function loadSelectedProduct(){const p=currentProduct();if(!p)return;selectedPhotoFile=null;$("productName").value=p.name||"";$("productPrice").value=p.price??"";$("productPhoto").value="";$("saveStatus").textContent="";showPreview(p.photoUrl);}
 function showPreview(src){const preview=$("editPreview");preview.innerHTML=src?`<img src="${escapeHTML(src)}" alt="Vista previa de la foto">`:"<span>Sin foto seleccionada</span>";}
 $("productSelector").addEventListener("change",loadSelectedProduct);
-$("productPhoto").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){$("saveStatus").textContent="Selecciona un archivo de imagen.";return;}if(file.size>5*1024*1024){$("saveStatus").textContent="La imagen supera 5 MB. Elige una más pequeña.";e.target.value="";return;}selectedPhotoFile=file;const reader=new FileReader();reader.onload=()=>showPreview(reader.result);reader.readAsDataURL(file);$("saveStatus").textContent="Foto lista. Pulsa Guardar cambios.";});
-async function uploadPhoto(file,productId){const ref=storage.ref(`productos/${productId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`);await ref.put(file);return await ref.getDownloadURL();}
+$("productPhoto").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){$("saveStatus").textContent="Selecciona un archivo de imagen.";e.target.value="";return;}if(file.size>10*1024*1024){$("saveStatus").textContent="La imagen supera 10 MB. Elige una más pequeña.";e.target.value="";return;}selectedPhotoFile=file;const reader=new FileReader();reader.onload=()=>showPreview(reader.result);reader.readAsDataURL(file);$("saveStatus").textContent="Foto lista. Se comprimirá antes de guardarla en Firestore.";});
+
+// Convierte la foto a JPEG reducido. No utiliza Firebase Storage ni servicios externos.
+async function compressPhoto(file){
+ const source=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("No se pudo leer la imagen seleccionada."));img.src=URL.createObjectURL(file);});
+ let width=source.naturalWidth,height=source.naturalHeight;
+ const maxSide=800;if(Math.max(width,height)>maxSide){const scale=maxSide/Math.max(width,height);width=Math.round(width*scale);height=Math.round(height*scale);}
+ const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+ let dataUrl="";
+ for(let attempt=0;attempt<5;attempt++){
+   canvas.width=width;canvas.height=height;ctx.clearRect(0,0,width,height);ctx.drawImage(source,0,0,width,height);
+   const quality=[0.65,0.55,0.45,0.4,0.35][attempt];dataUrl=canvas.toDataURL("image/jpeg",quality);
+   if(dataUrl.length<=600000)break;
+   width=Math.max(240,Math.round(width*0.82));height=Math.max(240,Math.round(height*0.82));
+ }
+ URL.revokeObjectURL(source.src);
+ if(dataUrl.length>650000)throw new Error("La foto sigue pesando demasiado. Prueba con una imagen más pequeña.");
+ return dataUrl;
+}
 async function saveProduct(){
- const p=currentProduct(),raw=$("productPrice").value.trim();if(!p){$("saveStatus").textContent="Selecciona un producto.";return;}if(raw!==""&&(!Number.isFinite(Number(raw))||Number(raw)<0)){$("saveStatus").textContent="Escribe un precio válido.";return;}
- $("saveProduct").disabled=true;$("saveStatus").textContent="Guardando en Firebase…";
- try{let photoUrl=p.photoUrl||null;if(selectedPhotoFile)photoUrl=await uploadPhoto(selectedPhotoFile,p.id);
-   const payload={nombre:p.name,precio:raw===""?null:Number(raw),categoria:p.category,fotoUrl,disponible:true,actualizadoEn:firebase.firestore.FieldValue.serverTimestamp()};
-   if(p.isDefault){const docId=slug(`${p.category}-${p.name}`);await db.collection("productos").doc(docId).set(payload,{merge:true});}
-   else await db.collection("productos").doc(p.id).set(payload,{merge:true});
-   selectedPhotoFile=null;$("productPhoto").value="";$("saveStatus").textContent="¡Guardado! Los clientes verán el cambio al actualizar la carta.";
- }catch(error){console.error(error);$("saveStatus").textContent="No se pudo guardar. Revisa las reglas de Firestore y Storage.";}
+ const p=currentProduct(),name=$("productName").value.trim(),raw=$("productPrice").value.trim();
+ if(!p){$("saveStatus").textContent="Selecciona un producto.";return;}
+ if(!name){$("saveStatus").textContent="Escribe el nombre del producto.";return;}
+ if(raw!==""&&(!Number.isFinite(Number(raw))||Number(raw)<0)){$("saveStatus").textContent="Escribe un precio válido.";return;}
+ if(!db||!auth||!auth.currentUser){$("saveStatus").textContent="Inicia sesión y verifica la conexión con Firebase.";return;}
+ $("saveProduct").disabled=true;$ ("saveStatus").textContent="Preparando y guardando en Firestore…";
+ try{
+   let photoUrl=p.photoUrl||null;if(selectedPhotoFile)photoUrl=await compressPhoto(selectedPhotoFile);
+   const payload={nombre:name,precio:raw===""?null:Number(raw),categoria:p.category,fotoUrl,disponible:true,actualizadoEn:firebase.firestore.FieldValue.serverTimestamp()};
+   const docId=p.isDefault?p.originalDocId:p.id;
+   await db.collection("productos").doc(docId).set(payload,{merge:true});
+   p.name=name;p.price=raw===""?null:Number(raw);p.photoUrl=photoUrl;
+   selectedPhotoFile=null;$("productPhoto").value="";populateSelector();$("productSelector").value=p.id;showPreview(photoUrl);
+   $("saveStatus").textContent="¡Guardado! La foto quedó almacenada en Firestore y el menú se actualizará.";
+ }catch(error){console.error("Error al guardar producto en Firestore:",error.code,error.message,error);$("saveStatus").textContent=error.code==="permission-denied"?"Firestore rechazó el guardado. Revisa las reglas y que hayas iniciado sesión con el administrador.":(error.message||"No se pudo guardar el producto en Firestore.");}
  finally{$("saveProduct").disabled=false;}
 }
 $("saveProduct").addEventListener("click",saveProduct);
-$("removePhoto").addEventListener("click",async()=>{const p=currentProduct();if(!p)return;try{const payload={nombre:p.name,precio:p.price??null,categoria:p.category,fotoUrl:null,disponible:true};const id=p.isDefault?slug(`${p.category}-${p.name}`):p.id;await db.collection("productos").doc(id).set(payload,{merge:true});showPreview(null);$("saveStatus").textContent="Foto eliminada de la carta.";}catch(e){console.error(e);$("saveStatus").textContent="No se pudo quitar la foto. Revisa las reglas.";}});
-$("addProductForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("newProductName").value.trim(),category=$("newProductCategory").value,raw=$("newProductPrice").value.trim();if(!name){return;}if(raw!==""&&(!Number.isFinite(Number(raw))||Number(raw)<0)){$("addProductStatus").textContent="Escribe un precio válido.";return;}try{const id=slug(`${category}-${name}`)+"-"+Date.now().toString(36);await db.collection("productos").doc(id).set({nombre:name,precio:raw===""?null:Number(raw),categoria:category,fotoUrl:null,disponible:true,creadoEn:firebase.firestore.FieldValue.serverTimestamp()});$("addProductForm").reset();$("addProductStatus").textContent="Producto agregado. Ya aparece en la carta.";}catch(error){console.error(error);$("addProductStatus").textContent="No se pudo agregar. Verifica la conexión y las reglas de Firestore.";}});
+$("removePhoto").addEventListener("click",async()=>{const p=currentProduct();if(!p)return;if(!db||!auth||!auth.currentUser){$("saveStatus").textContent="Inicia sesión para modificar productos.";return;}try{const name=$("productName").value.trim()||p.name;const payload={nombre:name,precio:p.price??null,categoria:p.category,fotoUrl:null,disponible:true};const id=p.isDefault?p.originalDocId:p.id;await db.collection("productos").doc(id).set(payload,{merge:true});p.name=name;p.photoUrl=null;showPreview(null);populateSelector();$("productSelector").value=p.id;$("saveStatus").textContent="Foto eliminada de Firestore.";}catch(e){console.error(e);$("saveStatus").textContent=e.code==="permission-denied"?"Firestore rechazó el cambio. Revisa las reglas de Firestore.":"No se pudo quitar la foto.";}});
+$("addProductForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("newProductName").value.trim(),category=$("newProductCategory").value,raw=$("newProductPrice").value.trim();if(!name){return;}if(!db||!auth||!auth.currentUser){$("addProductStatus").textContent="Inicia sesión para agregar productos.";return;}if(raw!==""&&(!Number.isFinite(Number(raw))||Number(raw)<0)){$("addProductStatus").textContent="Escribe un precio válido.";return;}try{const id=slug(`${category}-${name}`)+"-"+Date.now().toString(36);await db.collection("productos").doc(id).set({nombre:name,precio:raw===""?null:Number(raw),categoria:category,fotoUrl:null,disponible:true,creadoEn:firebase.firestore.FieldValue.serverTimestamp()});$("addProductForm").reset();$("addProductStatus").textContent="Producto agregado. Ya aparece en la carta.";}catch(error){console.error(error);$("addProductStatus").textContent="No se pudo agregar. Verifica la conexión y las reglas de Firestore.";}});
 $("logout").addEventListener("click",async()=>{try{if(auth)await auth.signOut();}finally{closeModal();}});
 $("resetData").addEventListener("click",()=>{$("saveStatus").textContent="Para retirar un producto, cambia su campo disponible a false en Firestore. No se borrarán datos por accidente.";});
 $("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),products:allProducts},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="respaldo-corazon-de-cafe.json";a.click();URL.revokeObjectURL(url);});
