@@ -1,134 +1,138 @@
 
-// Corazón de Café: carta y panel de edición.
-// Las fotografías se comprimen y se guardan en Firestore,
-// sin utilizar Firebase Storage ni servicios externos.
-
-const ADMIN_PASSWORD = "XIOMY123";
+/* =====================================================
+   CORAZÓN DE CAFÉ
+   Carta digital y panel de administración
+   Fotografías comprimidas y guardadas en Firestore
+   ===================================================== */
 
 const categories = [
- {id:"bebidas",label:"☕ Bebidas",title:"Bebidas"},
- {id:"limonadas",label:"🍋 Limonadas y especiales",title:"Limonadas y bebidas especiales"},
- {id:"jugos",label:"🥭 Jugos naturales",title:"Jugos naturales"},
- {id:"mecatos",label:"🍟 Mecatos",title:"Mecatos"},
- {id:"comidas",label:"🥐 Comidas",title:"Comidas"},
- {id:"reposteria",label:"🍰 Tortas y repostería",title:"Tortas y repostería"},
- {id:"helados",label:"🍨 Helados y postres",title:"Helados y postres"},
- {id:"embotelladas",label:"🥤 Otras bebidas",title:"Otras bebidas"},
- {id:"licores",label:"🍺 Licores",title:"Licores"}
+  { id: "bebidas", label: "☕ Bebidas", title: "Bebidas" },
+  { id: "limonadas", label: "🍋 Limonadas y especiales", title: "Limonadas y bebidas especiales" },
+  { id: "jugos", label: "🥭 Jugos naturales", title: "Jugos naturales" },
+  { id: "mecatos", label: "🍟 Mecatos", title: "Mecatos" },
+  { id: "comidas", label: "🥐 Comidas", title: "Comidas" },
+  { id: "reposteria", label: "🍰 Tortas y repostería", title: "Tortas y repostería" },
+  { id: "helados", label: "🍨 Helados y postres", title: "Helados y postres" },
+  { id: "embotelladas", label: "🥤 Otras bebidas", title: "Otras bebidas" },
+  { id: "licores", label: "🍺 Licores", title: "Licores" }
 ];
 
 const products = [
- ["Cappuccino caliente",7000,"bebidas"],
- ["Cappuccino frío",8000,"bebidas"],
- ["Café en leche",3000,"bebidas"],
- ["Café pequeño",2000,"bebidas"],
- ["Café doble",4000,"bebidas"],
- ["Malteadas",null,"bebidas"],
- ["Chocolate",3000,"bebidas"],
- ["Chocolate en leche",4000,"bebidas"],
- ["Aromáticas (sobre o panela)",2000,"bebidas"],
- ["Milo",6000,"bebidas"],
- ["Jugo en leche",8000,"bebidas"],
- ["Jugo en agua",7000,"bebidas"],
- ["Té blanco",7000,"bebidas"],
- ["Té negro",7000,"bebidas"],
+  ["Cappuccino caliente", 7000, "bebidas"],
+  ["Cappuccino frío", 8000, "bebidas"],
+  ["Café en leche", 3000, "bebidas"],
+  ["Café pequeño", 2000, "bebidas"],
+  ["Café doble", 4000, "bebidas"],
+  ["Malteadas", null, "bebidas"],
+  ["Chocolate", 3000, "bebidas"],
+  ["Chocolate en leche", 4000, "bebidas"],
+  ["Aromáticas (sobre o panela)", 2000, "bebidas"],
+  ["Milo", 6000, "bebidas"],
+  ["Jugo en leche", 8000, "bebidas"],
+  ["Jugo en agua", 7000, "bebidas"],
+  ["Té blanco", 7000, "bebidas"],
+  ["Té negro", 7000, "bebidas"],
 
- ["Limonada de mandarina",null,"limonadas"],
- ["Limonada de cereza",null,"limonadas"],
- ["Mango piña",null,"limonadas"],
- ["Mango viche",null,"limonadas"],
- ["Coco",null,"limonadas"],
- ["Coco café",null,"limonadas"],
- ["Frutos rojos",null,"limonadas"],
- ["Uva",null,"limonadas"],
- ["Hierbabuena",null,"limonadas"],
- ["Piña con hierbabuena",null,"limonadas"],
+  ["Limonada de mandarina", null, "limonadas"],
+  ["Limonada de cereza", null, "limonadas"],
+  ["Mango piña", null, "limonadas"],
+  ["Mango viche", null, "limonadas"],
+  ["Coco", null, "limonadas"],
+  ["Coco café", null, "limonadas"],
+  ["Frutos rojos", null, "limonadas"],
+  ["Uva", null, "limonadas"],
+  ["Hierbabuena", null, "limonadas"],
+  ["Piña con hierbabuena", null, "limonadas"],
 
- ["Jugo natural de mango",null,"jugos"],
- ["Jugo natural de maracuyá",null,"jugos"],
- ["Jugo natural de mora",null,"jugos"],
- ["Jugo natural de tomate de árbol",null,"jugos"],
+  ["Jugo natural de mango", null, "jugos"],
+  ["Jugo natural de maracuyá", null, "jugos"],
+  ["Jugo natural de mora", null, "jugos"],
+  ["Jugo natural de tomate de árbol", null, "jugos"],
 
- ["Papitas artesanales — limón",8000,"mecatos"],
- ["Papitas artesanales — pimienta",8000,"mecatos"],
- ["Papitas artesanales — natural",8000,"mecatos"],
- ["Papitas artesanales — chicharrón",8000,"mecatos"],
- ["Rosquitas",null,"mecatos"],
- ["Papitas",4000,"mecatos"],
- ["Doritos",4000,"mecatos"],
- ["Cheesetris",4000,"mecatos"],
- ["De Todito",4000,"mecatos"],
- ["Platanitos",4000,"mecatos"],
- ["Boliqueso",2500,"mecatos"],
- ["Chokis",2500,"mecatos"],
- ["Galletas",2500,"mecatos"],
- ["Limón miel",null,"mecatos"],
- ["Mayonesa",null,"mecatos"],
- ["Barbiquio chicharrón",null,"mecatos"],
+  ["Papitas artesanales — limón", 8000, "mecatos"],
+  ["Papitas artesanales — pimienta", 8000, "mecatos"],
+  ["Papitas artesanales — natural", 8000, "mecatos"],
+  ["Papitas artesanales — chicharrón", 8000, "mecatos"],
+  ["Rosquitas", null, "mecatos"],
+  ["Papitas", 4000, "mecatos"],
+  ["Doritos", 4000, "mecatos"],
+  ["Cheesetris", 4000, "mecatos"],
+  ["De Todito", 4000, "mecatos"],
+  ["Platanitos", 4000, "mecatos"],
+  ["Boliqueso", 2500, "mecatos"],
+  ["Chokis", 2500, "mecatos"],
+  ["Galletas", 2500, "mecatos"],
+  ["Limón miel", null, "mecatos"],
+  ["Mayonesa", null, "mecatos"],
+  ["Barbiquio chicharrón", null, "mecatos"],
 
- ["Pasteles",7000,"comidas"],
- ["Palitos",7000,"comidas"],
- ["Sándwich",null,"comidas"],
- ["Croissant",4000,"comidas"],
- ["Chorizos",null,"comidas"],
- ["Omelette",null,"comidas"],
+  ["Pasteles", 7000, "comidas"],
+  ["Palitos", 7000, "comidas"],
+  ["Sándwich", null, "comidas"],
+  ["Croissant", 4000, "comidas"],
+  ["Chorizos", null, "comidas"],
+  ["Omelette", null, "comidas"],
 
- ["Almojábana",null,"reposteria"],
- ["Torta de café",8000,"reposteria"],
- ["Torta de chocolate",8000,"reposteria"],
- ["Torta de zanahoria",8000,"reposteria"],
- ["Torta Red Velvet",8000,"reposteria"],
- ["Alfajores",null,"reposteria"],
- ["Galletas de chocolate",null,"reposteria"],
- ["Canelazos",null,"reposteria"],
+  ["Almojábana", null, "reposteria"],
+  ["Torta de café", 8000, "reposteria"],
+  ["Torta de chocolate", 8000, "reposteria"],
+  ["Torta de zanahoria", 8000, "reposteria"],
+  ["Torta Red Velvet", 8000, "reposteria"],
+  ["Alfajores", null, "reposteria"],
+  ["Galletas de chocolate", null, "reposteria"],
+  ["Canelazos", null, "reposteria"],
 
- ["Chococono",5000,"helados"],
- ["Turrones",6000,"helados"],
- ["Paleta en agua",2500,"helados"],
- ["Paleta de mango",6000,"helados"],
- ["Paleta de piña",6000,"helados"],
- ["Paleta tres leches",7000,"helados"],
- ["Paleta Tosh frutos rojos",7000,"helados"],
- ["Bocato",8000,"helados"],
- ["Galleta",5000,"helados"],
- ["Bola de helado",2500,"helados"],
- ["Brownie con helado",6000,"helados"],
- ["Postre de frutos rojos",null,"helados"],
- ["Postre de maracuyá",null,"helados"],
- ["Postre de galletas",null,"helados"],
+  ["Chococono", 5000, "helados"],
+  ["Turrones", 6000, "helados"],
+  ["Paleta en agua", 2500, "helados"],
+  ["Paleta de mango", 6000, "helados"],
+  ["Paleta de piña", 6000, "helados"],
+  ["Paleta tres leches", 7000, "helados"],
+  ["Paleta Tosh frutos rojos", 7000, "helados"],
+  ["Bocato", 8000, "helados"],
+  ["Galleta", 5000, "helados"],
+  ["Bola de helado", 2500, "helados"],
+  ["Brownie con helado", 6000, "helados"],
+  ["Postre de frutos rojos", null, "helados"],
+  ["Postre de maracuyá", null, "helados"],
+  ["Postre de galletas", null, "helados"],
 
- ["Botella grande de agua",4000,"embotelladas"],
- ["Botella pequeña de agua",3000,"embotelladas"],
- ["Soda",4000,"embotelladas"],
- ["Soda rosada",7000,"embotelladas"],
- ["Soda verde",7000,"embotelladas"],
- ["Electrolit",12000,"embotelladas"],
- ["Vive 100",6000,"embotelladas"],
- ["Saviloe",4000,"embotelladas"],
- ["Del Valle",4000,"embotelladas"],
- ["Agua saborizada",4000,"embotelladas"],
- ["Monster",12000,"embotelladas"],
+  ["Botella grande de agua", 4000, "embotelladas"],
+  ["Botella pequeña de agua", 3000, "embotelladas"],
+  ["Soda", 4000, "embotelladas"],
+  ["Soda rosada", 7000, "embotelladas"],
+  ["Soda verde", 7000, "embotelladas"],
+  ["Electrolit", 12000, "embotelladas"],
+  ["Vive 100", 6000, "embotelladas"],
+  ["Saviloe", 4000, "embotelladas"],
+  ["Del Valle", 4000, "embotelladas"],
+  ["Agua saborizada", 4000, "embotelladas"],
+  ["Monster", 12000, "embotelladas"],
 
- ["Poker",null,"licores"],
- ["Águila",null,"licores"],
- ["Pilsen",null,"licores"],
- ["Corona",null,"licores"],
- ["Coronita",null,"licores"],
- ["Costeñita",null,"licores"],
- ["Budweiser",null,"licores"],
- ["Cordillera rosada",null,"licores"],
- ["Cordillera verde",null,"licores"],
- ["Cordillera roja",null,"licores"],
- ["Club Colombia",null,"licores"],
- ["Club Colombia lata",null,"licores"],
- ["Stella",null,"licores"],
- ["Like",null,"licores"],
- ["Smirnoff media",null,"licores"],
- ["Copa de vino",null,"licores"],
- ["Buchanan’s",null,"licores"],
- ["Aguardiente media",null,"licores"],
- ["Aguardiente botella",null,"licores"]
+  ["Poker", null, "licores"],
+  ["Águila", null, "licores"],
+  ["Pilsen", null, "licores"],
+  ["Corona", null, "licores"],
+  ["Coronita", null, "licores"],
+  ["Costeñita", null, "licores"],
+  ["Budweiser", null, "licores"],
+  ["Cordillera rosada", null, "licores"],
+  ["Cordillera verde", null, "licores"],
+  ["Cordillera roja", null, "licores"],
+  ["Club Colombia", null, "licores"],
+  ["Club Colombia lata", null, "licores"],
+  ["Stella", null, "licores"],
+  ["Like", null, "licores"],
+  ["Smirnoff media", null, "licores"],
+  ["Copa de vino", null, "licores"],
+  ["Buchanan’s", null, "licores"],
+  ["Aguardiente media", null, "licores"],
+  ["Aguardiente botella", null, "licores"]
 ];
+
+/* =====================================================
+   FUNCIONES GENERALES
+   ===================================================== */
 
 const $ = id => document.getElementById(id);
 
@@ -145,9 +149,13 @@ const firebaseConfig = {
   appId: "1:1050467610067:web:2f979cffa29ca3cb935326"
 };
 
-// DECLARAR SLUG ANTES DE UTILIZARLO
-function slug(s) {
-  return String(s)
+/* IMPORTANTE:
+   slug se declara antes de construir los productos.
+   Así evitamos el error "Cannot access before initialization".
+*/
+
+function slug(value) {
+  return String(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -155,12 +163,28 @@ function slug(s) {
     .replace(/^-|-$/g, "");
 }
 
-const money = n =>
-  n == null || n === ""
-    ? "Consultar"
-    : "$" + Number(n).toLocaleString("es-CO");
+function money(value) {
+  if (value === null || value === "") {
+    return "Consultar";
+  }
 
-// CONEXIÓN FIREBASE
+  return "$" + Number(value).toLocaleString("es-CO");
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[character]));
+}
+
+/* =====================================================
+   CONEXIÓN FIREBASE
+   ===================================================== */
+
 let db = null;
 let auth = null;
 let firebaseReady = false;
@@ -174,23 +198,29 @@ try {
     db = firebase.firestore();
     auth = firebase.auth();
     firebaseReady = true;
+
+  } else {
+    console.error("No se cargó Firebase. Revisa los scripts de index.html.");
   }
+
 } catch (error) {
-  console.error("Firebase no pudo inicializarse:", error);
+  console.error("Error inicializando Firebase:", error);
 }
+
+/* =====================================================
+   PRODUCTOS
+   ===================================================== */
 
 let activeCategory = "bebidas";
 let selectedPhotoFile = null;
 let remoteProducts = [];
-let productsReady = false;
 
-// PRODUCTOS PREDETERMINADOS
-const defaultProducts = products.map((p, i) => ({
-  id: `base_${i}`,
-  originalDocId: slug(`${p[2]}-${p[0]}`),
-  name: p[0],
-  price: p[1],
-  category: p[2],
+const defaultProducts = products.map((product, index) => ({
+  id: `base_${index}`,
+  originalDocId: slug(`${product[2]}-${product[0]}`),
+  name: product[0],
+  price: product[1],
+  category: product[2],
   photoUrl: null,
   available: true,
   isDefault: true
@@ -198,83 +228,94 @@ const defaultProducts = products.map((p, i) => ({
 
 let allProducts = [...defaultProducts];
 
-function escapeHTML(s) {
-  return String(s ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[c]));
-}
-
-function normalizedDoc(d) {
-  const x = d.data();
+function normalizedDoc(document) {
+  const data = document.data();
 
   return {
-    id: d.id,
-    name: x.nombre || x.name || "Producto",
-    price: x.precio ?? x.price ?? null,
-    category: x.categoria || x.category || "bebidas",
-    photoUrl: x.fotoUrl || x.photoUrl || x.foto || x.photo || null,
-    available: x.disponible ?? x.available ?? true,
+    id: document.id,
+    name: data.nombre || data.name || "Producto",
+    price: data.precio ?? data.price ?? null,
+    category: data.categoria || data.category || "bebidas",
+    photoUrl: data.fotoUrl || data.photoUrl || data.foto || null,
+    available: data.disponible ?? data.available ?? true,
     isDefault: false
   };
 }
 
-// MOSTRAR CATEGORÍAS
+/* =====================================================
+   PINTAR CATEGORÍAS
+   ===================================================== */
+
 function renderCategories() {
-  categoryBar.innerHTML = categories.map(c => `
-    <button class="category-btn ${c.id === activeCategory ? "active" : ""}"
-      data-id="${c.id}">
-      ${c.label}
+  categoryBar.innerHTML = categories.map(category => `
+    <button
+      class="category-btn ${category.id === activeCategory ? "active" : ""}"
+      data-id="${category.id}">
+      ${category.label}
     </button>
   `).join("");
 
-  categoryBar.querySelectorAll("button").forEach(b => {
-    b.addEventListener("click", () => {
-      activeCategory = b.dataset.id;
+  categoryBar.querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", () => {
+      activeCategory = button.dataset.id;
       renderCategories();
       renderProducts();
     });
   });
 }
 
-// MOSTRAR PRODUCTOS
-function renderProducts() {
-  const cat = categories.find(c => c.id === activeCategory);
+/* =====================================================
+   PINTAR PRODUCTOS
+   ===================================================== */
 
-  const list = allProducts.filter(p =>
-    p.category === activeCategory && p.available !== false
+function renderProducts() {
+  const category = categories.find(
+    item => item.id === activeCategory
   );
 
-  sectionTitle.textContent = cat?.title || "Productos";
+  const list = allProducts.filter(product =>
+    product.category === activeCategory &&
+    product.available !== false
+  );
+
+  sectionTitle.textContent = category?.title || "Productos";
   itemCount.textContent = `${list.length} productos`;
 
-  menuGrid.innerHTML = list.map(p => {
-    const img = p.photoUrl
-      ? `<img class="product-image" src="${escapeHTML(p.photoUrl)}"
-          alt="${escapeHTML(p.name)}" loading="lazy">`
-      : `<div class="product-image product-placeholder" aria-hidden="true">☕</div>`;
+  menuGrid.innerHTML = list.map(product => {
+    const image = product.photoUrl
+      ? `<img
+          class="product-image"
+          src="${escapeHTML(product.photoUrl)}"
+          alt="${escapeHTML(product.name)}"
+          loading="lazy">`
+      : `<div class="product-image product-placeholder">☕</div>`;
 
     return `
       <article class="menu-card">
-        ${img}
+        ${image}
+
         <div class="product-info">
-          <div class="item-name">${escapeHTML(p.name)}</div>
-          ${p.price == null || p.price === ""
+          <div class="item-name">
+            ${escapeHTML(product.name)}
+          </div>
+
+          ${product.price == null
             ? '<div class="item-note">Consulta disponibilidad y precio</div>'
             : ""}
         </div>
-        <span class="price ${p.price == null || p.price === "" ? "ask" : ""}">
-          ${money(p.price)}
+
+        <span class="price">
+          ${money(product.price)}
         </span>
       </article>
     `;
   }).join("");
 }
 
-// CARGAR PRODUCTOS DESDE FIRESTORE
+/* =====================================================
+   LEER PRODUCTOS DE FIRESTORE
+   ===================================================== */
+
 function refreshProducts() {
   if (!db) {
     renderProducts();
@@ -284,27 +325,32 @@ function refreshProducts() {
   db.collection("productos").onSnapshot(snapshot => {
     remoteProducts = snapshot.docs.map(normalizedDoc);
 
-    const byId = new Map(remoteProducts.map(p => [p.id, p]));
+    const productsById = new Map(
+      remoteProducts.map(product => [product.id, product])
+    );
 
-    const defaults = defaultProducts.map(p => ({
-      ...p,
-      ...(byId.get(p.originalDocId) || {}),
-      id: p.id,
-      originalDocId: p.originalDocId,
-      isDefault: true
-    }));
+    const defaults = defaultProducts.map(product => {
+      const saved = productsById.get(product.originalDocId);
+
+      return {
+        ...product,
+        ...(saved || {}),
+        id: product.id,
+        originalDocId: product.originalDocId,
+        isDefault: true
+      };
+    });
 
     const defaultIds = new Set(
-      defaultProducts.map(p => p.originalDocId)
+      defaultProducts.map(product => product.originalDocId)
     );
 
     const extras = remoteProducts.filter(
-      p => !defaultIds.has(p.id)
+      product => !defaultIds.has(product.id)
     );
 
     allProducts = [...defaults, ...extras];
 
-    productsReady = true;
     renderProducts();
 
     if (!$("editorView").hidden) {
@@ -312,12 +358,15 @@ function refreshProducts() {
     }
 
   }, error => {
-    console.error(error);
+    console.error("Error leyendo productos:", error);
     renderProducts();
   });
 }
 
-// ABRIR Y CERRAR ADMINISTRACIÓN
+/* =====================================================
+   ADMINISTRACIÓN
+   ===================================================== */
+
 function openModal() {
   $("adminModal").hidden = false;
   document.body.classList.add("modal-open");
@@ -342,28 +391,34 @@ function closeModal() {
 $("openAdmin").addEventListener("click", openModal);
 $("closeAdmin").addEventListener("click", closeModal);
 
-$("adminModal").addEventListener("click", e => {
-  if (e.target === $("adminModal")) {
+$("adminModal").addEventListener("click", event => {
+  if (event.target === $("adminModal")) {
     closeModal();
   }
 });
 
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && !$("adminModal").hidden) {
+document.addEventListener("keydown", event => {
+  if (
+    event.key === "Escape" &&
+    !$("adminModal").hidden
+  ) {
     closeModal();
   }
 });
 
-// INICIAR SESIÓN
-$("loginForm").addEventListener("submit", async e => {
-  e.preventDefault();
+/* =====================================================
+   INICIAR SESIÓN
+   ===================================================== */
+
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
   const email = $("adminEmail").value.trim();
   const password = $("adminPassword").value;
 
   if (!auth) {
     $("loginError").textContent =
-      "Firebase no está conectado. Recarga la página e inténtalo de nuevo.";
+      "Firebase no está conectado. Verifica la configuración.";
     return;
   }
 
@@ -377,65 +432,72 @@ $("loginForm").addEventListener("submit", async e => {
     loadSelectedProduct();
 
   } catch (error) {
-    console.error(error);
+    console.error("Error de inicio de sesión:", error);
 
     $("loginError").textContent =
-      "No se pudo iniciar sesión. Verifica el correo y la contraseña del usuario creado en Firebase.";
+      "No se pudo iniciar sesión. Verifica tu correo y contraseña.";
   }
 });
 
-// SELECTOR DE PRODUCTOS
-function populateSelector() {
-  const sel = $("productSelector");
-  const current = sel.value;
+/* =====================================================
+   SELECTOR Y EDICIÓN
+   ===================================================== */
 
-  sel.innerHTML = allProducts.map(p => `
-    <option value="${escapeHTML(p.id)}">
-      ${escapeHTML(p.name)} —
-      ${escapeHTML(categories.find(c => c.id === p.category)?.title || p.category)}
+function populateSelector() {
+  const selector = $("productSelector");
+  const current = selector.value;
+
+  selector.innerHTML = allProducts.map(product => `
+    <option value="${escapeHTML(product.id)}">
+      ${escapeHTML(product.name)}
     </option>
   `).join("");
 
-  if (allProducts.some(p => p.id === current)) {
-    sel.value = current;
+  if (allProducts.some(product => product.id === current)) {
+    selector.value = current;
   }
 }
 
 function currentProduct() {
   return allProducts.find(
-    p => p.id === $("productSelector").value
+    product => product.id === $("productSelector").value
   ) || allProducts[0];
 }
 
 function loadSelectedProduct() {
-  const p = currentProduct();
+  const product = currentProduct();
 
-  if (!p) return;
+  if (!product) return;
 
   selectedPhotoFile = null;
 
-  $("productName").value = p.name || "";
-  $("productPrice").value = p.price ?? "";
+  $("productName").value = product.name || "";
+  $("productPrice").value = product.price ?? "";
   $("productPhoto").value = "";
-
   $("saveStatus").textContent = "";
 
-  showPreview(p.photoUrl);
+  showPreview(product.photoUrl);
 }
 
-function showPreview(src) {
+function showPreview(photoUrl) {
   const preview = $("editPreview");
 
-  preview.innerHTML = src
-    ? `<img src="${escapeHTML(src)}" alt="Vista previa de la foto">`
+  preview.innerHTML = photoUrl
+    ? `<img src="${escapeHTML(photoUrl)}" alt="Vista previa">`
     : "<span>Sin foto seleccionada</span>";
 }
 
-$("productSelector").addEventListener("change", loadSelectedProduct);
+$("productSelector").addEventListener(
+  "change",
+  loadSelectedProduct
+);
 
-// SELECCIONAR FOTO
-$("productPhoto").addEventListener("change", e => {
-  const file = e.target.files && e.target.files[0];
+/* =====================================================
+   SELECCIONAR FOTOGRAFÍA
+   ===================================================== */
+
+$("productPhoto").addEventListener("change", event => {
+  const file = event.target.files?.[0];
 
   if (!file) return;
 
@@ -443,15 +505,15 @@ $("productPhoto").addEventListener("change", e => {
     $("saveStatus").textContent =
       "Selecciona un archivo de imagen.";
 
-    e.target.value = "";
+    event.target.value = "";
     return;
   }
 
   if (file.size > 10 * 1024 * 1024) {
     $("saveStatus").textContent =
-      "La imagen supera 10 MB. Elige una más pequeña.";
+      "La imagen supera 10 MB. Selecciona otra.";
 
-    e.target.value = "";
+    event.target.value = "";
     return;
   }
 
@@ -459,78 +521,98 @@ $("productPhoto").addEventListener("change", e => {
 
   const reader = new FileReader();
 
-  reader.onload = () => showPreview(reader.result);
+  reader.onload = () => {
+    showPreview(reader.result);
+  };
+
   reader.readAsDataURL(file);
 
   $("saveStatus").textContent =
-    "Foto lista. Se comprimirá antes de guardarla en Firestore.";
+    "Fotografía seleccionada. Pulsa Guardar cambios.";
 });
 
-// COMPRIMIR FOTO SIN FIREBASE STORAGE
+/* =====================================================
+   COMPRIMIR IMAGEN
+   NO UTILIZA FIREBASE STORAGE
+   ===================================================== */
+
 async function compressPhoto(file) {
-  const source = await new Promise((resolve, reject) => {
-    const img = new Image();
+  const objectUrl = URL.createObjectURL(file);
 
-    img.onload = () => resolve(img);
-    img.onerror = () =>
-      reject(new Error("No se pudo leer la imagen seleccionada."));
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
 
-    img.src = URL.createObjectURL(file);
-  });
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(
+        new Error("No se pudo leer la imagen.")
+      );
 
-  let width = source.naturalWidth;
-  let height = source.naturalHeight;
+      img.src = objectUrl;
+    });
 
-  const maxSide = 800;
+    let width = image.naturalWidth;
+    let height = image.naturalHeight;
 
-  if (Math.max(width, height) > maxSide) {
-    const scale = maxSide / Math.max(width, height);
+    const maxSide = 800;
 
-    width = Math.round(width * scale);
-    height = Math.round(height * scale);
+    if (Math.max(width, height) > maxSide) {
+      const scale = maxSide / Math.max(width, height);
+
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    let dataUrl = "";
+
+    const qualities = [0.65, 0.55, 0.45, 0.4, 0.35];
+
+    for (const quality of qualities) {
+      canvas.width = width;
+      canvas.height = height;
+
+      context.clearRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+      if (dataUrl.length <= 600000) {
+        break;
+      }
+
+      width = Math.max(240, Math.round(width * 0.82));
+      height = Math.max(240, Math.round(height * 0.82));
+    }
+
+    if (dataUrl.length > 650000) {
+      throw new Error(
+        "La fotografía pesa demasiado. Selecciona una imagen más pequeña."
+      );
+    }
+
+    return dataUrl;
+
+  } finally {
+    URL.revokeObjectURL(objectUrl);
   }
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  let dataUrl = "";
-
-  for (let attempt = 0; attempt < 5; attempt++) {
-    canvas.width = width;
-    canvas.height = height;
-
-    ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(source, 0, 0, width, height);
-
-    const quality = [0.65, 0.55, 0.45, 0.4, 0.35][attempt];
-
-    dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-    if (dataUrl.length <= 600000) break;
-
-    width = Math.max(240, Math.round(width * 0.82));
-    height = Math.max(240, Math.round(height * 0.82));
-  }
-
-  URL.revokeObjectURL(source.src);
-
-  if (dataUrl.length > 650000) {
-    throw new Error(
-      "La foto sigue pesando demasiado. Prueba con una imagen más pequeña."
-    );
-  }
-
-  return dataUrl;
 }
 
-// GUARDAR PRODUCTO
-async function saveProduct() {
-  const p = currentProduct();
-  const name = $("productName").value.trim();
-  const raw = $("productPrice").value.trim();
+/* =====================================================
+   GUARDAR CAMBIOS DEL PRODUCTO
+   ===================================================== */
 
-  if (!p) {
-    $("saveStatus").textContent = "Selecciona un producto.";
+async function saveProduct() {
+  const product = currentProduct();
+
+  const name = $("productName").value.trim();
+  const rawPrice = $("productPrice").value.trim();
+
+  if (!product) {
+    $("saveStatus").textContent =
+      "Selecciona un producto.";
     return;
   }
 
@@ -541,74 +623,74 @@ async function saveProduct() {
   }
 
   if (
-    raw !== "" &&
-    (!Number.isFinite(Number(raw)) || Number(raw) < 0)
+    rawPrice !== "" &&
+    (!Number.isFinite(Number(rawPrice)) || Number(rawPrice) < 0)
   ) {
-    $("saveStatus").textContent = "Escribe un precio válido.";
+    $("saveStatus").textContent =
+      "Escribe un precio válido.";
     return;
   }
 
   if (!db || !auth || !auth.currentUser) {
     $("saveStatus").textContent =
-      "Inicia sesión y verifica la conexión con Firebase.";
+      "Inicia sesión para guardar los cambios.";
     return;
   }
 
   $("saveProduct").disabled = true;
+
   $("saveStatus").textContent =
-    "Preparando y guardando en Firestore…";
+    "Guardando cambios...";
 
   try {
-    let photoUrl = p.photoUrl || null;
+    let photoUrl = product.photoUrl || null;
 
     if (selectedPhotoFile) {
       photoUrl = await compressPhoto(selectedPhotoFile);
     }
 
-    // CORRECCIÓN: fotoUrl recibe explícitamente photoUrl.
+    // CORRECCIÓN DEFINITIVA:
+    // El campo de Firestore se llama fotoUrl.
+    // La variable que contiene la imagen se llama photoUrl.
     const payload = {
       nombre: name,
-      precio: raw === "" ? null : Number(raw),
-      categoria: p.category,
+      precio: rawPrice === "" ? null : Number(rawPrice),
+      categoria: product.category,
       fotoUrl: photoUrl,
       disponible: true,
       actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    const docId = p.isDefault
-      ? p.originalDocId
-      : p.id;
+    const documentId = product.isDefault
+      ? product.originalDocId
+      : product.id;
 
     await db.collection("productos")
-      .doc(docId)
+      .doc(documentId)
       .set(payload, { merge: true });
 
-    p.name = name;
-    p.price = raw === "" ? null : Number(raw);
-    p.photoUrl = photoUrl;
+    product.name = name;
+    product.price = rawPrice === "" ? null : Number(rawPrice);
+    product.photoUrl = photoUrl;
 
     selectedPhotoFile = null;
     $("productPhoto").value = "";
 
     populateSelector();
-    $("productSelector").value = p.id;
+    $("productSelector").value = product.id;
+
     showPreview(photoUrl);
 
     $("saveStatus").textContent =
-      "¡Guardado! La foto quedó almacenada en Firestore y el menú se actualizará.";
+      "¡Producto guardado correctamente!";
 
   } catch (error) {
-    console.error(
-      "Error al guardar producto en Firestore:",
-      error.code,
-      error.message,
-      error
-    );
+    console.error("Error guardando producto:", error);
 
     $("saveStatus").textContent =
       error.code === "permission-denied"
-        ? "Firestore rechazó el guardado. Revisa las reglas y que hayas iniciado sesión con el administrador."
-        : (error.message || "No se pudo guardar el producto en Firestore.");
+        ? "Firebase rechazó el cambio. Revisa las reglas de Firestore."
+        : `No se pudo guardar: ${error.message}`;
 
   } finally {
     $("saveProduct").disabled = false;
@@ -617,65 +699,61 @@ async function saveProduct() {
 
 $("saveProduct").addEventListener("click", saveProduct);
 
-// ELIMINAR FOTO
-$("removePhoto").addEventListener("click", async () => {
-  const p = currentProduct();
+/* =====================================================
+   ELIMINAR FOTOGRAFÍA
+   ===================================================== */
 
-  if (!p) return;
+$("removePhoto").addEventListener("click", async () => {
+  const product = currentProduct();
+
+  if (!product) return;
 
   if (!db || !auth || !auth.currentUser) {
     $("saveStatus").textContent =
-      "Inicia sesión para modificar productos.";
+      "Inicia sesión para modificar el producto.";
     return;
   }
 
   try {
-    const name = $("productName").value.trim() || p.name;
-
-    const payload = {
-      nombre: name,
-      precio: p.price ?? null,
-      categoria: p.category,
-      fotoUrl: null,
-      disponible: true
-    };
-
-    const id = p.isDefault
-      ? p.originalDocId
-      : p.id;
+    const documentId = product.isDefault
+      ? product.originalDocId
+      : product.id;
 
     await db.collection("productos")
-      .doc(id)
-      .set(payload, { merge: true });
+      .doc(documentId)
+      .set({
+        nombre: $("productName").value.trim() || product.name,
+        precio: product.price ?? null,
+        categoria: product.category,
+        fotoUrl: null,
+        disponible: true
+      }, { merge: true });
 
-    p.name = name;
-    p.photoUrl = null;
+    product.photoUrl = null;
 
     showPreview(null);
 
-    populateSelector();
-    $("productSelector").value = p.id;
+    $("saveStatus").textContent =
+      "Fotografía eliminada correctamente.";
+
+  } catch (error) {
+    console.error("Error eliminando fotografía:", error);
 
     $("saveStatus").textContent =
-      "Foto eliminada de Firestore.";
-
-  } catch (e) {
-    console.error(e);
-
-    $("saveStatus").textContent =
-      e.code === "permission-denied"
-        ? "Firestore rechazó el cambio. Revisa las reglas de Firestore."
-        : "No se pudo quitar la foto.";
+      "No se pudo eliminar la fotografía. Revisa Firestore.";
   }
 });
 
-// AGREGAR PRODUCTO
-$("addProductForm").addEventListener("submit", async e => {
-  e.preventDefault();
+/* =====================================================
+   AGREGAR NUEVO PRODUCTO
+   ===================================================== */
+
+$("addProductForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
   const name = $("newProductName").value.trim();
   const category = $("newProductCategory").value;
-  const raw = $("newProductPrice").value.trim();
+  const rawPrice = $("newProductPrice").value.trim();
 
   if (!name) return;
 
@@ -686,85 +764,108 @@ $("addProductForm").addEventListener("submit", async e => {
   }
 
   if (
-    raw !== "" &&
-    (!Number.isFinite(Number(raw)) || Number(raw) < 0)
+    rawPrice !== "" &&
+    (!Number.isFinite(Number(rawPrice)) || Number(rawPrice) < 0)
   ) {
     $("addProductStatus").textContent =
       "Escribe un precio válido.";
     return;
   }
 
+  const submitButton = $("addProductForm")
+    .querySelector('button[type="submit"]');
+
+  submitButton.disabled = true;
+
   try {
-    const id =
+    const documentId =
       slug(`${category}-${name}`) + "-" + Date.now().toString(36);
 
-    await db.collection("productos").doc(id).set({
-      nombre: name,
-      precio: raw === "" ? null : Number(raw),
-      categoria: category,
-      fotoUrl: null,
-      disponible: true,
-      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await db.collection("productos")
+      .doc(documentId)
+      .set({
+        nombre: name,
+        precio: rawPrice === "" ? null : Number(rawPrice),
+        categoria: category,
+        fotoUrl: null,
+        disponible: true,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
     $("addProductForm").reset();
 
     $("addProductStatus").textContent =
-      "Producto agregado. Ya aparece en la carta.";
+      "Producto agregado correctamente.";
 
   } catch (error) {
-    console.error(error);
+    console.error("Error agregando producto:", error);
 
     $("addProductStatus").textContent =
-      "No se pudo agregar. Verifica la conexión y las reglas de Firestore.";
+      "No se pudo agregar el producto. Revisa Firestore.";
+
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
-// CERRAR SESIÓN
+/* =====================================================
+   CERRAR SESIÓN
+   ===================================================== */
+
 $("logout").addEventListener("click", async () => {
   try {
-    if (auth) await auth.signOut();
+    if (auth) {
+      await auth.signOut();
+    }
   } finally {
     closeModal();
   }
 });
 
-// OPCIONES ADICIONALES
-$("resetData").addEventListener("click", () => {
-  $("saveStatus").textContent =
-    "Para retirar un producto, cambia su campo disponible a false en Firestore. No se borrarán datos por accidente.";
-});
+/* =====================================================
+   RESPALDO DE PRODUCTOS
+   ===================================================== */
 
-// EXPORTAR RESPALDO
 $("exportData").addEventListener("click", () => {
-  const blob = new Blob([
-    JSON.stringify({
-      exportedAt: new Date().toISOString(),
-      products: allProducts
-    }, null, 2)
-  ], {
-    type: "application/json"
-  });
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    products: allProducts
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(backup, null, 2)],
+    { type: "application/json" }
+  );
 
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const link = document.createElement("a");
 
-  a.href = url;
-  a.download = "respaldo-corazon-de-cafe.json";
-
-  a.click();
+  link.href = url;
+  link.download = "respaldo-corazon-de-cafe.json";
+  link.click();
 
   URL.revokeObjectURL(url);
 });
 
-// WHATSAPP
+$("resetData").addEventListener("click", () => {
+  $("saveStatus").textContent =
+    "No se borraron datos. Para ocultar un producto, cambia disponible a false en Firestore.";
+});
+
+/* =====================================================
+   BOTÓN WHATSAPP
+   ===================================================== */
+
 $("whatsappButton").href =
   "https://wa.me/573001547647?text=" +
   encodeURIComponent(
     "Hola, Corazón de Café. Quisiera consultar la carta y hacer un pedido."
   );
 
-// INICIAR PÁGINA
+/* =====================================================
+   INICIAR LA PÁGINA
+   ===================================================== */
+
 renderCategories();
 renderProducts();
 refreshProducts();
