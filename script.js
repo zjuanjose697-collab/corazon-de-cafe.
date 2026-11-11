@@ -180,9 +180,25 @@ const defaultProducts = products.map((p, i) => ({
   price: p[1],
   category: p[2],
   photoUrl: null,
+  localPhoto: `images/productos/${slug(`${p[2]}-${p[0]}`)}.jpg`,
   available: true,
   isDefault: true
 }));
+
+const localPhotoFallbacks = {
+  "images/productos/mecatos-papitas-artesanales-pimienta.jpg": "images/productos/mecatos-barbiquio-chicharr-n.jpg",
+  "images/productos/mecatos-papitas.jpg": "images/productos/mecatos-barbiquio-chicharr-n.jpg",
+  "images/productos/mecatos-platanitos.jpg": "images/productos/mecatos-barbiquio-chicharr-n.jpg",
+  "images/productos/mecatos-rosquitas.jpg": "images/productos/mecatos-barbiquio-chicharr-n.jpg",
+  "images/productos/reposteria-alfajores.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-almoj-bana.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-canelazos.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-galletas-de-chocolate.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-torta-de-caf.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-torta-de-chocolate.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-torta-de-zanahoria.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "images/productos/reposteria-torta-red-velvet.jpg": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+};
 
 let allProducts = [...defaultProducts];
 
@@ -242,8 +258,9 @@ function renderProducts() {
   itemCount.textContent = `${list.length} productos`;
 
   menuGrid.innerHTML = list.map(p => {
-    const img = p.photoUrl
-      ? `<img class="product-image" src="${escapeHTML(p.photoUrl)}" alt="${escapeHTML(p.name)}" loading="lazy">`
+    const imageSource = p.photoUrl || localPhotoFallbacks[p.localPhoto] || p.localPhoto;
+    const img = imageSource
+      ? `<img class="product-image" src="${escapeHTML(imageSource)}" alt="${escapeHTML(p.name)}" loading="lazy">`
       : `<div class="product-image product-placeholder" aria-hidden="true">☕</div>`;
 
     return `
