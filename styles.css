@@ -20,3 +20,22 @@
 .hero-bottom{display:flex;justify-content:space-between;align-items:center;gap:20px;max-width:1140px;margin:20px auto 0;padding:0 4px;}
 .hero-bottom p{font-size:10px;letter-spacing:3px;color:#d9a78a;font-weight:700;margin:0;}
 @media(max-width:560px){.hero{padding:0 0 24px}.hero .nav{margin:0 5vw;height:75px}.hero-cover{border-radius:0 0 12px 12px}.hero-cover-image{width:100%;max-height:none;object-fit:contain}.hero-bottom{padding:0 5vw;margin-top:16px}.hero-bottom p{font-size:8px;letter-spacing:1.8px}.hero-bottom .button{padding:12px 15px;gap:12px;font-size:11px}}
+
+/* FONDO FOTOGRÁFICO DEL MENÚ */
+body {
+    background-image:
+        linear-gradient(
+            rgba(250, 242, 231, 0.84),
+            rgba(250, 242, 231, 0.84)
+        ),
+        url("images/fondo-marcas.png");
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* El contenido del menú deja visible el fondo */
+main#carta {
+    background: transparent;
+}
