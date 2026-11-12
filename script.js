@@ -173,6 +173,26 @@ let selectedPhotoFile = null;
 let remoteProducts = [];
 let productsReady = false;
 
+// Fotografías locales verificadas que sí corresponden a bebidas.
+// Los demás productos quedan sin fotografía hasta tener un archivo específico;
+// así nunca se muestra una taza de café en Mecatos, Comidas o Postres.
+const verifiedLocalPhotos = {
+  "Cappuccino caliente": "images/productos/bebidas-cappuccino-caliente.jpg",
+  "Cappuccino frío": "images/productos/bebidas-cappuccino-fr-o.jpg",
+  "Café en leche": "images/productos/bebidas-caf-en-leche.jpg",
+  "Café pequeño": "images/productos/bebidas-caf-peque-o.jpg",
+  "Café doble": "images/productos/bebidas-caf-doble.jpg",
+  "Malteadas": "images/productos/bebidas-malteadas.jpg",
+  "Chocolate": "images/productos/bebidas-chocolate.jpg",
+  "Chocolate en leche": "images/productos/bebidas-chocolate-en-leche.jpg",
+  "Aromáticas (sobre o panela)": "images/productos/bebidas-arom-ticas-sobre-o-panela.jpg",
+  "Milo": "images/productos/bebidas-milo.jpg",
+  "Jugo en leche": "images/productos/bebidas-jugo-en-leche.jpg",
+  "Jugo en agua": "images/productos/bebidas-jugo-en-agua.jpg",
+  "Té blanco": "images/productos/bebidas-t-blanco.jpg",
+  "Té negro": "images/productos/bebidas-t-negro.jpg"
+};
+
 const defaultProducts = products.map((p, i) => ({
   id: `base_${i}`,
   originalDocId: slug(`${p[2]}-${p[0]}`),
@@ -180,26 +200,15 @@ const defaultProducts = products.map((p, i) => ({
   price: p[1],
   category: p[2],
   photoUrl: null,
-  localPhoto: `images/productos/${slug(`${p[2]}-${p[0]}`)}.jpg`,
+  localPhoto: verifiedLocalPhotos[p[0]] || null,
   available: true,
   isDefault: true
 }));
 
-const localPhotoFallbacks = {
-  // No sustituir productos por fotografías de otra categoría.
-  // Si no existe una foto específica, se muestra el marcador neutral.
-  "images/productos/mecatos-papitas-artesanales-pimienta.jpg": null,
-  "images/productos/mecatos-papitas.jpg": null,
-  "images/productos/mecatos-platanitos.jpg": null,
-  "images/productos/mecatos-rosquitas.jpg": null,
-  "images/productos/reposteria-alfajores.jpg": null,
-  "images/productos/reposteria-almoj-bana.jpg": null,
-  "images/productos/reposteria-canelazos.jpg": null,
-  "images/productos/reposteria-galletas-de-chocolate.jpg": null,
-  "images/productos/reposteria-torta-de-caf.jpg": null,
-  "images/productos/reposteria-torta-de-chocolate.jpg": null,
-  "images/productos/reposteria-torta-de-zanahoria.jpg": null,
-  "images/productos/reposteria-torta-red-velvet.jpg": null,
+const categoryIcons = {
+  bebidas: "☕", limonadas: "🍋", jugos: "🥭", mecatos: "🍟",
+  comidas: "🥐", reposteria: "🍰",
+  helados: "🍨", embotelladas: "🥤", licores: "🍾"
 };
 
 let allProducts = [...defaultProducts];
@@ -226,7 +235,10 @@ function normalizedDoc(d) {
     name: x.nombre || x.name || "Producto",
     price: x.precio ?? x.price ?? null,
     category: x.categoria || x.category || "bebidas",
-    photoUrl: x.fotoUrl || x.photoUrl || x.foto || x.photo || null,
+    photoUrl: (x.fotoOrigen === "admin" || x.photoSource === "admin")
+      ? (x.fotoUrl || x.photoUrl || x.foto || x.photo || null)
+      : null,
+    photoSource: x.fotoOrigen || x.photoSource || null,
     available: x.disponible ?? x.available ?? true,
     isDefault: false
   };
@@ -260,10 +272,13 @@ function renderProducts() {
   itemCount.textContent = `${list.length} productos`;
 
   menuGrid.innerHTML = list.map(p => {
-    const imageSource = p.photoUrl || (Object.prototype.hasOwnProperty.call(localPhotoFallbacks, p.localPhoto) ? localPhotoFallbacks[p.localPhoto] : p.localPhoto);
+    const imageSource = p.photoSource === "admin" && p.photoUrl
+      ? p.photoUrl
+      : p.localPhoto;
+    const placeholderIcon = categoryIcons[p.category] || "🛍️";
     const img = imageSource
-      ? `<img class="product-image" src="${escapeHTML(imageSource)}" alt="${escapeHTML(p.name)}" loading="lazy">`
-      : `<div class="product-image product-placeholder" aria-hidden="true">☕</div>`;
+      ? `<img class="product-image" src="${escapeHTML(imageSource)}" alt="${escapeHTML(p.name)}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'product-image product-placeholder',textContent:'${placeholderIcon}'}))">`
+      : `<div class="product-image product-placeholder" aria-hidden="true">${placeholderIcon}</div>`;
 
     return `
       <article class="menu-card">
@@ -395,7 +410,7 @@ function loadSelectedProduct() {
   $("productPrice").value = p.price ?? "";
   $("productPhoto").value = "";
   $("saveStatus").textContent = "";
-  showPreview(p.photoUrl);
+  showPreview(p.photoSource === "admin" && p.photoUrl ? p.photoUrl : p.localPhoto);
 }
 
 function showPreview(src) {
@@ -527,6 +542,7 @@ async function saveProduct() {
       precio: raw === "" ? null : Number(raw),
       categoria: p.category,
       fotoUrl: photoUrl,
+      fotoOrigen: selectedPhotoFile ? "admin" : (p.photoSource || null),
       disponible: true,
       actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -538,12 +554,13 @@ async function saveProduct() {
     p.name = name;
     p.price = raw === "" ? null : Number(raw);
     p.photoUrl = photoUrl;
+    if (selectedPhotoFile) p.photoSource = "admin";
 
     selectedPhotoFile = null;
     $("productPhoto").value = "";
     populateSelector();
     $("productSelector").value = p.id;
-    showPreview(photoUrl);
+    showPreview(p.photoSource === "admin" ? photoUrl : p.localPhoto);
 
     $("saveStatus").textContent =
       "¡Guardado! La foto quedó almacenada en Firestore y el menú se actualizará.";
@@ -586,6 +603,7 @@ $("removePhoto").addEventListener("click", async () => {
       precio: p.price ?? null,
       categoria: p.category,
       fotoUrl: null,
+      fotoOrigen: null,
       disponible: true
     };
 
@@ -595,8 +613,9 @@ $("removePhoto").addEventListener("click", async () => {
 
     p.name = name;
     p.photoUrl = null;
+    p.photoSource = null;
 
-    showPreview(null);
+    showPreview(p.localPhoto);
     populateSelector();
     $("productSelector").value = p.id;
 
@@ -640,6 +659,7 @@ $("addProductForm").addEventListener("submit", async e => {
       precio: raw === "" ? null : Number(raw),
       categoria: category,
       fotoUrl: null,
+      fotoOrigen: null,
       disponible: true,
       creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     });
